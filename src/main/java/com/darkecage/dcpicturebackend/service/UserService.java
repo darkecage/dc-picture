@@ -100,4 +100,13 @@ public interface UserService extends IService<User> {
      * @return: com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.darkecage.dcpicturebackend.model.entity.User>
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
+
+    /**
+     * @title: 判断是否为管理员
+     * @author: darkecage
+     * @date: 2025/5/4 0:01
+     * @param: user
+     * @return: boolean
+     */
+    boolean isAdmin(User user);
 }
