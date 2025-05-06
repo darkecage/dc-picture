@@ -2,6 +2,7 @@ package com.darkecage.dcpicturebackend.mapper;
 
 import com.darkecage.dcpicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
 * @author Cage
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2025-05-03 20:27:19
 * @Entity com.darkecage.dcpicturebackend.model.entity.Picture
 */
+@Mapper
 public interface PictureMapper extends BaseMapper<Picture> {
 
 }
