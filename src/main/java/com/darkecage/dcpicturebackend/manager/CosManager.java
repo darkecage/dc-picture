@@ -1,5 +1,7 @@
 package com.darkecage.dcpicturebackend.manager;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.StrUtil;
 import com.darkecage.dcpicturebackend.config.CosClientConfig;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.COSObject;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class CosManager {
@@ -60,8 +64,43 @@ public class CosManager {
          PicOperations picOperations = new PicOperations();
          //设置为1表示返回原图信息
          picOperations.setIsPicInfo(1);
+         //图片处理规则列表
+         List<PicOperations.Rule> rules = new ArrayList<>();
+         //0.图片压缩（转成webp格式）
+         String webpKey = FileUtil.mainName(key) + ".webp";
+         PicOperations.Rule compressRule = new PicOperations.Rule();
+         compressRule.setFileId(webpKey);
+         compressRule.setBucket(cosClientConfig.getBucket());
+         compressRule.setRule("imageMogr2/format/webp");
+         rules.add(compressRule);
+         //1.缩略图处理, 仅对>20KB的图片生成缩略图
+         if (file.length() > 20 * 1024) {
+             PicOperations.Rule thumbnailRule = new PicOperations.Rule();
+             //拼接缩略图的路径
+             String suffix = FileUtil.getSuffix(key);
+             if (StrUtil.isBlank(suffix)) {
+                 suffix = "png";
+             }
+             String thumbnailKey = FileUtil.mainName(key) + "_thumbnail." + suffix;
+             thumbnailRule.setFileId(thumbnailKey);
+             thumbnailRule.setBucket(cosClientConfig.getBucket());
+             //缩放规则
+             thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 256, 256));
+             rules.add(thumbnailRule);
+         }
          //构造处理参数
+         picOperations.setRules(rules);
          putObjectRequest.setPicOperations(picOperations);
          return cosClient.putObject(putObjectRequest);
+     }
+
+     /**
+      * @title: 删除对象
+      * @author: darkecage
+      * @date: 2025/5/10 22:25
+      * @param: key
+      */
+     public void deleteObject(String key) {
+         cosClient.deleteObject(cosClientConfig.getBucket(), key);
      }
 }

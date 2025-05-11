@@ -1,5 +1,6 @@
 package com.darkecage.dcpicturebackend.manager.upload;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
@@ -10,13 +11,15 @@ import com.darkecage.dcpicturebackend.exception.ErrorCode;
 import com.darkecage.dcpicturebackend.manager.CosManager;
 import com.darkecage.dcpicturebackend.model.dto.file.UploadPictureResult;
 import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.model.ciModel.persistence.CIObject;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
+import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @title: 图片上传模板
@@ -59,6 +62,20 @@ public abstract class PictureUploadTemplate {
             PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
             //5.获取图片信息对象，封装返回结果
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
+            //获取到图片处理结果
+            ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
+            List<CIObject> objectList = processResults.getObjectList();
+            if (CollUtil.isNotEmpty(objectList)) {
+                //获取压缩之后得到的文件信息
+                CIObject compressCiObject = objectList.get(0);
+                //缩略图默认等于压缩图
+                CIObject thumbnailCiObject = compressCiObject;
+                if (objectList.size() > 1) {
+                    thumbnailCiObject = objectList.get(1);
+                }
+                // 封装压缩图的返回结果
+                return buildResult(originalFilename, compressCiObject, thumbnailCiObject);
+            }
             return buildResult(originalFilename, uploadPath, file, imageInfo);
         } catch (Exception e) {
             log.error("图片上传到对象存储失败" + e);
@@ -94,6 +111,38 @@ public abstract class PictureUploadTemplate {
      * @param: inputSource
      */
     protected abstract void validPicture(Object inputSource);
+
+
+    /**
+     * @title: 封装返回结果
+     * @author: darkecage
+     * @date: 2025/5/10 18:02
+     * @param: originalFilename
+     * @param: compressCiObject
+     * @param: thumbnailCiObject
+     * @return: com.darkecage.dcpicturebackend.model.dto.file.UploadPictureResult
+     */
+    private UploadPictureResult buildResult(String originalFilename, CIObject compressCiObject, CIObject thumbnailCiObject) {
+        //计算宽高
+        String format = compressCiObject.getFormat();
+        int picWidth = compressCiObject.getWidth();
+        int picHeight = compressCiObject.getHeight();
+        double picScale = NumberUtil.round(picWidth * 1.0/picHeight, 2).doubleValue();
+        //封装返回结果
+        UploadPictureResult uploadPictureResult = new UploadPictureResult();
+        //设置压缩后的原图地址
+        uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressCiObject.getKey());
+        uploadPictureResult.setPicName(FileUtil.mainName(originalFilename));
+        uploadPictureResult.setPicSize(compressCiObject.getSize().longValue());
+        uploadPictureResult.setPicWidth(picWidth);
+        uploadPictureResult.setPicHeight(picHeight);
+        uploadPictureResult.setPicScale(picScale);
+        uploadPictureResult.setPicFormat(format);
+        //缩略图地址
+        uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
+        //返回可访问的地址
+        return uploadPictureResult;
+    }
 
     /**
      * @title: 封装返回结果

@@ -96,4 +96,12 @@ public interface PictureService extends IService<Picture> {
      * @return: java.lang.Integer
      */
     Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
+
+    /**
+     * @title: 清理图片
+     * @author: darkecage
+     * @date: 2025/5/10 22:26
+     * @param: oldPicture
+     */
+    void clearPictureFile(Picture oldPicture);
 }

@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.darkecage.dcpicturebackend.exception.BusinessException;
 import com.darkecage.dcpicturebackend.exception.ErrorCode;
 import com.darkecage.dcpicturebackend.exception.ThrowUtils;
+import com.darkecage.dcpicturebackend.manager.CosManager;
 import com.darkecage.dcpicturebackend.manager.FileManager;
 import com.darkecage.dcpicturebackend.manager.upload.FilePictureUpload;
 import com.darkecage.dcpicturebackend.manager.upload.PictureUploadTemplate;
@@ -32,6 +33,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -63,6 +66,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private UrlPictureUpload urlPictureUpload;
+    @Resource
+    private CosManager cosManager;
 
     /**
      * @title: 校验图片
@@ -126,6 +131,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         //构造入库的图片信息
         Picture picture = new Picture();
         picture.setUrl(uploadPictureResult.getUrl());
+        picture.setThumbnailUrl(uploadPictureResult.getThumbnailUrl());
         //支持外层传递图片名称
         String picName = uploadPictureResult.getPicName();
         if (pictureUploadRequest != null && StrUtil.isNotBlank(pictureUploadRequest.getPicName())) {
@@ -146,6 +152,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             //如果是更新，需要补充id和编辑时间
             picture.setId(pictureId);
             picture.setEditTime(new Date());
+            this.clearPictureFile(picture);
         }
         //创建
         boolean result = this.saveOrUpdate(picture);
@@ -397,6 +404,33 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
         }
         return uploadCount;
+    }
+
+    /**
+     * @title: 清理图片
+     * @author: darkecage
+     * @date: 2025/5/10 22:26
+     * @param: oldPicture
+     */
+    @Async
+    @Override
+    public void clearPictureFile(Picture oldPicture) {
+        //判断该图片是否呗多条记录使用（前提是开启了秒传）
+        String pictureUrl = oldPicture.getUrl();
+        Long count = this.lambdaQuery()
+                .eq(Picture::getUrl, pictureUrl)
+                .count();
+        //不止一条记录用到了该图片，不清理
+        if (count > 1) {
+            return;
+        }
+        //删除图片
+        cosManager.deleteObject(pictureUrl);
+        //删除缩略图
+        String thumbnailUrl = oldPicture.getThumbnailUrl();
+        if (StrUtil.isNotBlank(thumbnailUrl)) {
+            cosManager.deleteObject(thumbnailUrl);
+        }
     }
 }
 
