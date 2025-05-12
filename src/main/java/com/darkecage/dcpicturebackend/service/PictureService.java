@@ -3,10 +3,7 @@ package com.darkecage.dcpicturebackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.darkecage.dcpicturebackend.model.dto.picture.PictureQueryRequest;
-import com.darkecage.dcpicturebackend.model.dto.picture.PictureReviewRequest;
-import com.darkecage.dcpicturebackend.model.dto.picture.PictureUploadByBatchRequest;
-import com.darkecage.dcpicturebackend.model.dto.picture.PictureUploadRequest;
+import com.darkecage.dcpicturebackend.model.dto.picture.*;
 import com.darkecage.dcpicturebackend.model.entity.Picture;
 import com.darkecage.dcpicturebackend.model.entity.User;
 import com.darkecage.dcpicturebackend.model.vo.PictureVO;
@@ -39,6 +36,24 @@ public interface PictureService extends IService<Picture> {
      * @return: com.darkecage.dcpicturebackend.model.vo.PictureVO
      */
     PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser);
+
+    /**
+     * @title: 删除图片
+     * @author: darkecage
+     * @date: 2025/5/12 22:08
+     * @param: pictureId
+     * @param: loginUser
+     */
+    void deletePicture(long pictureId, User loginUser);
+
+    /**
+     * @title: 编辑图片
+     * @author: darkecage
+     * @date: 2025/5/12 22:14
+     * @param: pictureEditRequest
+     * @param: loginUser
+     */
+    void editPicture(PictureEditRequest pictureEditRequest, User loginUser);
 
     /**
      * @title: 获取查询条件
@@ -104,4 +119,13 @@ public interface PictureService extends IService<Picture> {
      * @param: oldPicture
      */
     void clearPictureFile(Picture oldPicture);
+
+    /**
+     * @title: 校验空间图片的权限
+     * @author: darkecage
+     * @date: 2025/5/12 21:59
+     * @param: loginUser
+     * @param: picture
+     */
+    void checkPictureAuth(User loginUser, Picture picture);
 }
