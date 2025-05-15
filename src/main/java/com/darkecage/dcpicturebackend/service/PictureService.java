@@ -10,6 +10,7 @@ import com.darkecage.dcpicturebackend.model.vo.PictureVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author Cage
@@ -128,4 +129,24 @@ public interface PictureService extends IService<Picture> {
      * @param: picture
      */
     void checkPictureAuth(User loginUser, Picture picture);
+
+    /**
+     * @title: 根据颜色搜索图片
+     * @author: darkecage
+     * @date: 2025/5/14 1:19
+     * @param: spaceId
+     * @param: picColor
+     * @param: loginUser
+     * @return: java.util.List<com.darkecage.dcpicturebackend.model.vo.PictureVO>
+     */
+    List<PictureVO> searchPictureByColor(Long spaceId, String picColor, User loginUser);
+
+    /**
+     * @title: 批量编辑图片
+     * @author: darkecage
+     * @date: 2025/5/14 19:50
+     * @param: pictureEditByBatchRequest
+     * @param: loginUser
+     */
+    void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
 }

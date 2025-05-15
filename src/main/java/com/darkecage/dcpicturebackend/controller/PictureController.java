@@ -5,6 +5,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.darkecage.dcpicturebackend.annotation.AuthCheck;
+import com.darkecage.dcpicturebackend.api.imagesearch.ImageSearchApiFacade;
+import com.darkecage.dcpicturebackend.api.imagesearch.model.ImageSearchResult;
 import com.darkecage.dcpicturebackend.common.BaseResponse;
 import com.darkecage.dcpicturebackend.common.DeleteRequest;
 import com.darkecage.dcpicturebackend.common.ResultUtils;
@@ -328,4 +330,57 @@ public class PictureController {
         return ResultUtils.success(uploadCount);
     }
 
+    /**
+     * @title: 以图搜图
+     * @author: darkecage
+     * @date: 2025/5/13 23:10
+     * @param: searchPictureByPictureRequest
+     * @param: request
+     * @return: com.darkecage.dcpicturebackend.common.BaseResponse<com.darkecage.dcpicturebackend.api.imagesearch.model.ImageSearchResult>
+     */
+    @PostMapping("/search/picture")
+    public BaseResponse<List<ImageSearchResult>> searchPictureByPicture(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAMS_ERROR);
+        Long pictureId = searchPictureByPictureRequest.getPictureId();
+        ThrowUtils.throwIf(pictureId == null || pictureId <= 0, ErrorCode.PARAMS_ERROR);
+        Picture picture = pictureService.getById(pictureId);
+        ThrowUtils.throwIf(picture == null, ErrorCode.PARAMS_ERROR);
+        String imageUrl = picture.getThumbnailUrl();
+        ThrowUtils.throwIf(StrUtil.isBlank(imageUrl), ErrorCode.PARAMS_ERROR);
+        List<ImageSearchResult> imageSearchResults = ImageSearchApiFacade.searchImage(imageUrl);
+        return ResultUtils.success(imageSearchResults);
+    }
+
+    /**
+     * @title: 按照颜色搜索图片
+     * @author: darkecage
+     * @date: 2025/5/14 18:15
+     * @param: searchPictureByColorRequest
+     * @param: request
+     * @return: com.darkecage.dcpicturebackend.common.BaseResponse<java.util.List<com.darkecage.dcpicturebackend.model.vo.PictureVO>>
+     */
+    @PostMapping("/search/color")
+    public BaseResponse<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(searchPictureByColorRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.PARAMS_ERROR);
+        List<PictureVO> pictureVOList = pictureService.searchPictureByColor(searchPictureByColorRequest.getSpaceId(), searchPictureByColorRequest.getPicColor(), loginUser);
+        return ResultUtils.success(pictureVOList);
+    }
+
+    /**
+     * @title: 图片批量编辑
+     * @author: darkecage
+     * @date: 2025/5/14 20:09
+     * @param: pictureEditByBatchRequest
+     * @param: request
+     * @return: com.darkecage.dcpicturebackend.common.BaseResponse<java.lang.Boolean>
+     */
+    @PostMapping("/edit/batch")
+    public BaseResponse<Boolean> editPictureByBatch(@RequestBody PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureEditByBatchRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        pictureService.editPictureByBatch(pictureEditByBatchRequest, loginUser);
+        return ResultUtils.success(true);
+    }
 }

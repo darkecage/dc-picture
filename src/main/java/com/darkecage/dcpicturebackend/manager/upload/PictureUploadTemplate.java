@@ -74,7 +74,7 @@ public abstract class PictureUploadTemplate {
                     thumbnailCiObject = objectList.get(1);
                 }
                 // 封装压缩图的返回结果
-                return buildResult(originalFilename, compressCiObject, thumbnailCiObject);
+                return buildResult(originalFilename, compressCiObject, thumbnailCiObject, imageInfo);
             }
             return buildResult(originalFilename, uploadPath, file, imageInfo);
         } catch (Exception e) {
@@ -116,13 +116,14 @@ public abstract class PictureUploadTemplate {
     /**
      * @title: 封装返回结果
      * @author: darkecage
-     * @date: 2025/5/10 18:02
+     * @date: 2025/5/14 1:05
      * @param: originalFilename
      * @param: compressCiObject
      * @param: thumbnailCiObject
+     * @param: imageInfo
      * @return: com.darkecage.dcpicturebackend.model.dto.file.UploadPictureResult
      */
-    private UploadPictureResult buildResult(String originalFilename, CIObject compressCiObject, CIObject thumbnailCiObject) {
+    private UploadPictureResult buildResult(String originalFilename, CIObject compressCiObject, CIObject thumbnailCiObject, ImageInfo imageInfo) {
         //计算宽高
         String format = compressCiObject.getFormat();
         int picWidth = compressCiObject.getWidth();
@@ -138,6 +139,7 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);
         uploadPictureResult.setPicFormat(format);
+        uploadPictureResult.setPicColor(imageInfo.getAve());
         //缩略图地址
         uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
         //返回可访问的地址
@@ -169,6 +171,7 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);
         uploadPictureResult.setPicFormat(format);
+        uploadPictureResult.setPicColor(imageInfo.getAve());
         //返回可访问的地址
         return uploadPictureResult;
     }
