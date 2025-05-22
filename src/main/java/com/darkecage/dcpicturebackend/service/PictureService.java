@@ -3,6 +3,7 @@ package com.darkecage.dcpicturebackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.darkecage.dcpicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.darkecage.dcpicturebackend.model.dto.picture.*;
 import com.darkecage.dcpicturebackend.model.entity.Picture;
 import com.darkecage.dcpicturebackend.model.entity.User;
@@ -149,4 +150,13 @@ public interface PictureService extends IService<Picture> {
      * @param: loginUser
      */
     void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
+
+    /**
+     * @title: 创建扩图任务
+     * @author: darkecage
+     * @date: 2025/5/15 19:09
+     * @param: createPictureOutPaintingTaskRequest
+     * @param: loginUser
+     */
+    CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser);
 }

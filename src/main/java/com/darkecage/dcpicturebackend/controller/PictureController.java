@@ -5,6 +5,9 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.darkecage.dcpicturebackend.annotation.AuthCheck;
+import com.darkecage.dcpicturebackend.api.aliyunai.AliYunApi;
+import com.darkecage.dcpicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
+import com.darkecage.dcpicturebackend.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.darkecage.dcpicturebackend.api.imagesearch.ImageSearchApiFacade;
 import com.darkecage.dcpicturebackend.api.imagesearch.model.ImageSearchResult;
 import com.darkecage.dcpicturebackend.common.BaseResponse;
@@ -55,6 +58,9 @@ public class PictureController {
 
     @Resource
     private SpaceService spaceService;
+
+    @Resource
+    private AliYunApi aliYunApi;
 
     //本地缓存
     private final Cache<String, String> LOCAL_CACHE =
@@ -382,5 +388,36 @@ public class PictureController {
         User loginUser = userService.getLoginUser(request);
         pictureService.editPictureByBatch(pictureEditByBatchRequest, loginUser);
         return ResultUtils.success(true);
+    }
+
+    /**
+     * @title: 创建AI扩图任务
+     * @author: darkecage
+     * @date: 2025/5/15 19:37
+     * @param: createPictureOutPaintingTaskRequest
+     * @param: request
+     * @return: com.darkecage.dcpicturebackend.common.BaseResponse<com.darkecage.dcpicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse>
+     */
+    @PostMapping("/out_painting/create_task")
+    public BaseResponse<CreateOutPaintingTaskResponse> createOutPaintingTask (@RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(createPictureOutPaintingTaskRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
+        CreateOutPaintingTaskResponse response = pictureService.createPictureOutPaintingTask(createPictureOutPaintingTaskRequest, loginUser);
+        return ResultUtils.success(response);
+    }
+
+    /**
+     * @title: 查询 AI 扩图任务
+     * @author: darkecage
+     * @date: 2025/5/15 19:45
+     * @param: taskId
+     * @return: com.darkecage.dcpicturebackend.common.BaseResponse<com.darkecage.dcpicturebackend.api.aliyunai.model.GetOutPaintingTaskResponse>
+     */
+    @GetMapping("/out_painting/get_task")
+    public BaseResponse<GetOutPaintingTaskResponse> getOutPaintingTask(String taskId) {
+        ThrowUtils.throwIf(StrUtil.isBlank(taskId), ErrorCode.PARAMS_ERROR);
+        GetOutPaintingTaskResponse response = aliYunApi.getOutPaintingTask(taskId);
+        return ResultUtils.success(response);
     }
 }
