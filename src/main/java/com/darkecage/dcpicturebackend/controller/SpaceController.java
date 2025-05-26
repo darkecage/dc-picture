@@ -9,6 +9,7 @@ import com.darkecage.dcpicturebackend.constant.UserConstant;
 import com.darkecage.dcpicturebackend.exception.BusinessException;
 import com.darkecage.dcpicturebackend.exception.ErrorCode;
 import com.darkecage.dcpicturebackend.exception.ThrowUtils;
+import com.darkecage.dcpicturebackend.manager.auth.SpaceUserAuthManager;
 import com.darkecage.dcpicturebackend.model.dto.space.*;
 import com.darkecage.dcpicturebackend.model.entity.Space;
 import com.darkecage.dcpicturebackend.model.entity.User;
@@ -36,6 +37,9 @@ public class SpaceController {
 
     @Resource
     private SpaceService spaceService;
+
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
 
 
     /**
@@ -134,8 +138,11 @@ public class SpaceController {
         // 查询数据库
         Space space = spaceService.getById(id);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, userService.getLoginUser(request));
+        SpaceVO spaceVO = spaceService.getSpaceVO(space, request);
+        spaceVO.setPermissionList(permissionList);
         // 获取封装类
-        return ResultUtils.success(spaceService.getSpaceVO(space, request));
+        return ResultUtils.success(spaceVO);
     }
 
     /**
